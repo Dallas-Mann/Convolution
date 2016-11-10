@@ -17,7 +17,7 @@ import java.io.FileReader;
  * valid values are all integers; (negative, positive, and zero)
  */
 
-public class Mask {
+public class Mask{
 	protected int[][] mask;
 	protected int numRows;
 	protected int numCols;
