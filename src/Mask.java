@@ -19,6 +19,8 @@ import java.io.FileReader;
 
 public class Mask {
 	protected int[][] mask;
+	protected int numRows;
+	protected int numCols;
 	
 	//constructor
 	public Mask(String filename){
@@ -34,9 +36,7 @@ public class Mask {
 	}
 	
 	private int[][] readMask(BufferedReader fileReader){
-		int numRows;
-		int numCols;
-		int[][] mask;
+		int[][] returnMask;
 		
 		try{
 			String currentLine = fileReader.readLine();
@@ -45,22 +45,30 @@ public class Mask {
 			currentLine = fileReader.readLine();
 			numCols = Integer.parseInt(currentLine);
 			
-			mask = new int[numRows][numCols];
+			returnMask = new int[numRows][numCols];
 			
 			String[] maskValues;
 			for(int m = 0; m < numRows; m++){
 				currentLine = fileReader.readLine();
 				maskValues = currentLine.split("\\s+");
 				for(int n = 0; n < numCols; n++){
-					mask[m][n] = Integer.parseInt(maskValues[n]);
+					returnMask[m][n] = Integer.parseInt(maskValues[n]);
 				}
 			}
-			return mask;
+			return returnMask;
 		}
 		catch(Exception e){
 			System.out.println("Invalid file format.");
 			System.exit(-1);
 		}
 		return null;
+	}
+	
+	public int getNumRows(){
+		return numRows;
+	}
+	
+	public int getNumCols(){
+		return numCols;
 	}
 }
