@@ -29,7 +29,7 @@ public class Mask{
 			mask = readMask(fileReader);
 		}
 		catch(FileNotFoundException e){
-			System.out.println("File not found.");
+			System.err.println("File not found.");
 			System.exit(-1);
 			e.printStackTrace();
 		}
@@ -58,7 +58,7 @@ public class Mask{
 			return returnMask;
 		}
 		catch(Exception e){
-			System.out.println("Invalid file format.");
+			System.err.println("Invalid file format.");
 			System.exit(-1);
 		}
 		return null;
@@ -70,5 +70,18 @@ public class Mask{
 	
 	public int getNumCols(){
 		return numCols;
+	}
+	
+	public int getMaskVal(int x, int y){
+		return mask[y][x];
+	}
+	
+	public void printMask(){
+		for(int y = 0; y < mask.length; y++){
+			for(int x = 0; x < mask[0].length; x++){
+				System.out.print(mask[y][x] + " ");
+			}
+			System.out.println();
+		}
 	}
 }
