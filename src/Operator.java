@@ -21,48 +21,57 @@ public class Operator{
 		//new image dimensions will be narrower on left/right and top/bottom depending on mask size
 		int newImageHeight = image.getHeight() - mask.getNumRows() + 1;
 		int newImageWidth = image.getWidth() - mask.getNumCols() + 1;
-		byte[] convolvedImage = new byte[4 * newImageHeight * newImageWidth];
+		byte[] convolvedImage = new byte[3 * newImageHeight * newImageWidth];
 		
 		for(int rowIndex = 0; rowIndex < newImageHeight; rowIndex++){
 			for(int colIndex = 0; colIndex < newImageWidth; colIndex++){
-				int newAlphaVal = 0;
 				int newBlueVal = 0;
 				int newGreenVal = 0;
 				int newRedVal = 0;
-				int baseIndex = 4*(colIndex+(newImageWidth*rowIndex));
-				
 				for(int mRowIndex = 0, maxMRowIndex = mask.numRows; mRowIndex < maxMRowIndex; mRowIndex++){
 					for(int mColIndex = 0, maxMColIndex = mask.numCols; mColIndex < maxMColIndex; mColIndex++){
 						int multiplier = mask.getMaskVal(mColIndex, mRowIndex);
 						int x = colIndex + mColIndex;
 						int y = rowIndex + mRowIndex;
-						int currentAlphaVal = image.getAlphaVal(x, y);
 						int currentBlueVal = image.getBlueVal(x, y);
 						int currentGreenVal = image.getGreenVal(x, y);
 						int currentRedVal = image.getRedVal(x, y);
 						
-						newAlphaVal += (multiplier * currentAlphaVal);
 						newBlueVal += (multiplier * currentBlueVal);
 						newGreenVal += (multiplier * currentGreenVal);
 						newRedVal += (multiplier * currentRedVal);
 					}
 				}
-				
 				//TODO
 				//will need to rescale this value
-				convolvedImage[baseIndex] = (byte) 255;
-				convolvedImage[baseIndex + 1] = (byte) Math.abs(newBlueVal);
-				convolvedImage[baseIndex + 2] = (byte) Math.abs(newGreenVal);
-				convolvedImage[baseIndex + 3] = (byte) Math.abs(newRedVal);
+				int baseIndex = 3*(colIndex+(newImageWidth*rowIndex));
+				
+				convolvedImage[baseIndex + 0] = (byte) Math.abs(newBlueVal);
+				convolvedImage[baseIndex + 1] = (byte) Math.abs(newGreenVal);
+				convolvedImage[baseIndex + 2] = (byte) Math.abs(newRedVal);
 			}
 		}
-		return new Image(newImageWidth, newImageHeight, convolvedImage);
+		Image scaledImage = new Image(newImageWidth, newImageHeight, convolvedImage);
+		//scaledImage.rescale();
+		return scaledImage;
 	}
 	
 	private Image combineImages(Image image1, Image image2){
-		//TODO combine the two pixel arrays
-		
-		return null;
+		byte[] pixelData1 = image1.getPixelData();
+		byte[] pixelData2 = image2.getPixelData();
+		if(pixelData1.length != pixelData2.length){
+			return null;
+		}
+		else{
+			int length = pixelData1.length;
+			int width = image1.getWidth();
+			int height = image1.getHeight();
+			byte[] combinedPixels = new byte[length];
+			for(int i = 0; i < length; i++){
+				combinedPixels[i] = (byte) Math.sqrt(pixelData1[i]*pixelData1[i] + pixelData2[i]*pixelData2[i]);
+			}
+			return new Image(width, height, combinedPixels);
+		}
 	}
 	
 	public void savePNG(String filename, Image image){

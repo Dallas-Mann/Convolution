@@ -14,14 +14,13 @@ public class Image{
 	private int height;
 	private int width;
 	protected byte[] pixelData;
-	private boolean hasAlpha;
 	
 	//constructors
 	public Image(String filename){
 		try{
 			bufferedImage = ImageIO.read(new File(filename));
-			if(bufferedImage.getType() != BufferedImage.TYPE_4BYTE_ABGR){
-				bufferedImage = convertTo4ByteABGR(bufferedImage);
+			if(bufferedImage.getType() != BufferedImage.TYPE_3BYTE_BGR){
+				bufferedImage = convertTo3ByteBGR(bufferedImage);
 			}
 			height = bufferedImage.getHeight();
 			width = bufferedImage.getWidth();
@@ -36,7 +35,7 @@ public class Image{
 	public Image(int width, int height, byte[] pixelData){
 		try
 		{
-			bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+			bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
 			bufferedImage.setData(Raster.createRaster(bufferedImage.getSampleModel(), new DataBufferByte(pixelData, pixelData.length), null));
 			this.height = height;
 			this.width = width;
@@ -48,10 +47,10 @@ public class Image{
 		}
 	}
 	
-	// converts type of image into a 4ByteABGR format to store pixel values correctly
-	private BufferedImage convertTo4ByteABGR(BufferedImage image)
+	// converts type of image into a 3ByteBGR format to store pixel values correctly
+	private BufferedImage convertTo3ByteBGR(BufferedImage image)
 	{
-	    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_4BYTE_ABGR);
+	    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
 	    Graphics2D g = newImage.createGraphics();
 	    g.drawImage(image, 0, 0, null);
 	    g.dispose();
@@ -67,28 +66,71 @@ public class Image{
 		return width;
 	}
 	
-	public byte getAlphaVal(int x, int y){
-		int index = 4*(x+(width*y));
-		return pixelData[index];
+	public int getBlueVal(int x, int y){
+		int index = 3*(x+(width*y));
+		return pixelData[index + 0] & 0xff;
 	}
 	
-	public byte getBlueVal(int x, int y){
-		int index = 4*(x+(width*y));
-		return pixelData[index + 1];
+	public int getGreenVal(int x, int y){
+		int index = 3*(x+(width*y));
+		return pixelData[index + 1] & 0xff;
 	}
 	
-	public byte getGreenVal(int x, int y){
-		int index = 4*(x+(width*y));
-		return pixelData[index + 2];
+	public int getRedVal(int x, int y){
+		int index = 3*(x+(width*y));
+		return pixelData[index + 2] & 0xff;
 	}
 	
-	public byte getRedVal(int x, int y){
-		int index = 4*(x+(width*y));
-		return pixelData[index + 3];
+	public byte[] getPixelData(){
+		return pixelData;
 	}
 	
-	public boolean hasAlpha(){
-		return hasAlpha;
+	public void rescale(){
+		int minBlue = 255;
+		int minGreen = 255;
+		int minRed = 255;
+		int maxBlue = 0;
+		int maxGreen = 0;
+		int maxRed = 0;
+		
+		for(int row = 0; row < height; row++){
+			for(int col = 0; col < width; col++){
+				int curBlue = getBlueVal(row, col);
+				int curGreen = getGreenVal(row, col);
+				int curRed = getRedVal(row, col);
+				
+				if(curBlue < minBlue){
+					minBlue = curBlue;
+				}
+				if(curBlue > maxBlue){
+					maxBlue = curBlue;
+				}
+				
+				if(curGreen < minGreen){
+					minGreen = curGreen;
+				}
+				if(curGreen > maxGreen){
+					maxGreen = curGreen;
+				}
+				
+				if(curRed < minRed){
+					minRed = curRed;
+				}
+				if(curRed > maxRed){
+					maxRed = curRed;
+				}
+				
+				for(int y = 0; y < height; y++){
+					for(int x = 0; x < width; x++){
+						int index = 3*(x+(width*y));
+						pixelData[index + 0] = (byte) (255*((getBlueVal(x, y) - minBlue)/(maxBlue - minBlue)));
+						pixelData[index + 1] = (byte) (255*((getGreenVal(x, y) - minGreen)/(maxGreen - minGreen)));
+						pixelData[index + 2] = (byte) (255*((getRedVal(x, y) - minRed)/(maxRed - minRed)));
+					}
+				}
+				bufferedImage.setData(Raster.createRaster(bufferedImage.getSampleModel(), new DataBufferByte(pixelData, pixelData.length), null));
+			}
+		}
 	}
 	
 	public void printPixelData(String filename){
@@ -98,7 +140,7 @@ public class Image{
 			int index = 0;
 			for(int i = 0; i < height; i++){
 				for(int j = 0; j < width; j++){
-					index = (4*(j+(i*width)));
+					index = (3*(j+(i*width)));
 					out.format(index + ": [%02x ", pixelData[index]);
 					out.format("%02x ", pixelData[index+1]);
 					out.format("%02x ", pixelData[index+2]);
